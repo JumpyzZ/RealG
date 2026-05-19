@@ -1,17 +1,23 @@
-import html2canvas from "html2canvas";
+import { domToPng } from "modern-screenshot";
 
+// Elements with `data-export="hide"` are dropped during PNG export so the
+// shared image stays minimal (no chrome, no editor hints).
 export async function exportNodeAsPng(
   node: HTMLElement,
   filename: string,
 ): Promise<void> {
-  const canvas = await html2canvas(node, {
-    backgroundColor: "#ffffff",
+  const dataUrl = await domToPng(node, {
     scale: 2,
-    useCORS: true,
+    backgroundColor: "#ffffff",
+    filter: (el) => {
+      if (el instanceof HTMLElement && el.dataset.export === "hide") {
+        return false;
+      }
+      return true;
+    },
   });
-  const url = canvas.toDataURL("image/png");
   const a = document.createElement("a");
-  a.href = url;
+  a.href = dataUrl;
   a.download = filename;
   document.body.appendChild(a);
   a.click();
