@@ -109,8 +109,12 @@ export function Whiteboard() {
         <tbody>
           {players.map((p) => (
             <tr key={p.id}>
-              <td className="sticky left-0 bg-white border border-slate-200 px-3 py-1 text-slate-800 font-medium">
-                {p.name}
+              <td className="sticky left-0 bg-white border border-slate-200 px-2 py-0.5 text-slate-800 font-medium">
+                <NameCell
+                  playerId={p.id}
+                  name={p.name}
+                  displayName={p.displayName}
+                />
               </td>
               <td
                 className="border border-slate-200 px-2 py-1 text-center text-slate-500 tabular-nums"
@@ -143,5 +147,85 @@ export function Whiteboard() {
         </tbody>
       </table>
     </div>
+  );
+}
+
+interface NameCellProps {
+  playerId: string;
+  name: string;
+  displayName: string | undefined;
+}
+
+function NameCell({ playerId, name, displayName }: NameCellProps) {
+  const setPlayerDisplayName = useSessionStore((s) => s.setPlayerDisplayName);
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(displayName ?? "");
+
+  const handleStart = () => {
+    setDraft(displayName ?? "");
+    setEditing(true);
+  };
+
+  const handleCommit = () => {
+    setPlayerDisplayName(playerId, draft);
+    setEditing(false);
+  };
+
+  const handleCancel = () => {
+    setDraft(displayName ?? "");
+    setEditing(false);
+  };
+
+  if (editing) {
+    return (
+      <div className="flex items-center gap-1.5 min-w-[8rem]">
+        <span className="text-slate-500 text-xs shrink-0">{name}</span>
+        <input
+          autoFocus
+          type="text"
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onBlur={handleCommit}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") handleCommit();
+            if (e.key === "Escape") handleCancel();
+          }}
+          placeholder="真名（可选）"
+          className="flex-1 min-w-0 border border-slate-300 rounded px-1.5 py-0.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400"
+        />
+      </div>
+    );
+  }
+
+  // When a real name is set: screen shows "原名 · 真名", but the export
+  // hides the original-name span so the PNG carries only the real name.
+  return (
+    <button
+      type="button"
+      onClick={handleStart}
+      className="w-full flex items-center gap-1.5 text-left rounded px-1 py-1 hover:bg-slate-50 group"
+      title="点击编辑真名"
+    >
+      {displayName ? (
+        <>
+          <span
+            className="text-slate-500 text-xs"
+            data-export="hide"
+          >
+            {name} ·
+          </span>
+          <span className="text-slate-800">{displayName}</span>
+        </>
+      ) : (
+        <span className="text-slate-800">{name}</span>
+      )}
+      <span
+        className="ml-auto text-slate-300 group-hover:text-slate-500 text-xs opacity-0 group-hover:opacity-100"
+        data-export="hide"
+        aria-hidden="true"
+      >
+        ✎
+      </span>
+    </button>
   );
 }

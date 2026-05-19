@@ -9,7 +9,12 @@ import type { PlayerLevel } from "../domain/types";
 
 export interface RosterPlayer {
   id: string;
+  // Original signup name from the 接龙. Used as the source of truth for
+  // identification and shown wherever the operator works.
   name: string;
+  // Optional real name annotation, e.g. when "Zoe+1" turns out to be Mary.
+  // Surfaces in the whiteboard view and replaces `name` in the exported PNG.
+  displayName?: string;
   level: PlayerLevel;
 }
 
@@ -28,6 +33,7 @@ interface SessionState {
   setDate: (date: string) => void;
   setPlayersFromNames: (names: string[]) => void;
   togglePlayerLevel: (playerId: string) => void;
+  setPlayerDisplayName: (playerId: string, displayName: string) => void;
   removePlayer: (playerId: string) => void;
   setCourts: (labels: string[]) => void;
   setRoundCount: (n: number) => void;
@@ -93,6 +99,19 @@ export const useSessionStore = create<SessionState>()(
               ? { ...p, level: p.level === "A" ? "B" : "A" }
               : p,
           ),
+        })),
+
+      setPlayerDisplayName: (playerId, displayName) =>
+        set((state) => ({
+          players: state.players.map((p) => {
+            if (p.id !== playerId) return p;
+            const trimmed = displayName.trim();
+            if (!trimmed || trimmed === p.name) {
+              const { displayName: _omit, ...rest } = p;
+              return rest;
+            }
+            return { ...p, displayName: trimmed };
+          }),
         })),
 
       removePlayer: (playerId) =>
