@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSessionStore } from "../store/sessionStore";
 import { parseRoster } from "../utils/roster";
+import { colorForCourt } from "../utils/courtColors";
 
 export function SetupPanel() {
   const date = useSessionStore((s) => s.date);
@@ -17,6 +18,11 @@ export function SetupPanel() {
 
   const [rosterText, setRosterText] = useState("");
   const [courtsText, setCourtsText] = useState(courts.join(", "));
+
+  // Keep the input in sync when the store changes (e.g. after resetAll).
+  useEffect(() => {
+    setCourtsText(courts.join(", "));
+  }, [courts]);
 
   const handleApplyRoster = () => {
     const names = parseRoster(rosterText);
@@ -136,37 +142,78 @@ export function SetupPanel() {
       )}
 
       <div>
+        <div className="flex items-baseline justify-between mb-1.5">
+          <span className="text-slate-600">
+            场地 · {courts.length} 块
+          </span>
+          {courts.length > 0 && (
+            <div className="flex flex-wrap gap-1 justify-end">
+              {courts.map((label) => {
+                const c = colorForCourt(label);
+                return (
+                  <span
+                    key={label}
+                    className={`text-xs font-bold tabular-nums px-1.5 py-0.5 rounded ${c.bg} ${c.text}`}
+                  >
+                    {label}
+                  </span>
+                );
+              })}
+            </div>
+          )}
+        </div>
         <label className="block">
-          <span className="text-slate-600">场地号（逗号或空格分隔）</span>
+          <span className="sr-only">场地号（逗号或空格分隔）</span>
           <input
             type="text"
             value={courtsText}
             onChange={(e) => setCourtsText(e.target.value)}
             onBlur={handleApplyCourts}
-            placeholder="13, 14, 19, 20"
-            className="mt-1 w-full border border-slate-300 rounded px-2 py-1 font-mono"
+            placeholder="14, 15, 16, 19, 20, 21"
+            className="w-full border border-slate-300 rounded px-2 py-1 font-mono"
           />
         </label>
-        <button
-          type="button"
-          onClick={handleApplyCourts}
-          className="mt-2 w-full bg-slate-100 text-slate-700 rounded px-3 py-1.5 text-xs font-medium hover:bg-slate-200"
-        >
-          应用场地
-        </button>
+        <p className="mt-1 text-xs text-slate-400">
+          逗号或空格分隔，回车或失焦自动应用
+        </p>
       </div>
 
-      <label className="block">
-        <span className="text-slate-600">轮次数（列数）</span>
-        <input
-          type="number"
-          min={1}
-          max={16}
-          value={roundCount}
-          onChange={(e) => setRoundCount(Number(e.target.value) || 1)}
-          className="mt-1 w-full border border-slate-300 rounded px-2 py-1"
-        />
-      </label>
+      <div>
+        <div className="flex items-center justify-between mb-1.5">
+          <span className="text-slate-600">轮次</span>
+          <span className="text-sm font-semibold text-slate-800 tabular-nums">
+            {roundCount} 局
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setRoundCount(roundCount - 1)}
+            disabled={roundCount <= 1}
+            className="w-9 h-9 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 text-lg font-semibold disabled:opacity-40"
+            aria-label="减少一局"
+          >
+            −
+          </button>
+          <input
+            type="number"
+            min={1}
+            max={16}
+            value={roundCount}
+            onChange={(e) => setRoundCount(Number(e.target.value) || 1)}
+            className="flex-1 min-w-0 border border-slate-300 rounded px-2 py-1 text-center tabular-nums"
+          />
+          <button
+            type="button"
+            onClick={() => setRoundCount(roundCount + 1)}
+            disabled={roundCount >= 16}
+            className="w-9 h-9 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 text-lg font-semibold disabled:opacity-40"
+            aria-label="增加一局"
+          >
+            +
+          </button>
+        </div>
+      </div>
     </aside>
   );
 }

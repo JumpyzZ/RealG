@@ -61,7 +61,10 @@ const initialState: Pick<
 > = {
   date: today(),
   players: [],
-  courts: [],
+  // Default to the club's regular six courts. The organizer can edit on the
+  // night if fewer courts are reserved.
+  courts: ["14", "15", "16", "19", "20", "21"],
+  // Two-hour sessions in the club fit eight rounds.
   roundCount: 8,
   activeRound: 1,
   assignments: {},

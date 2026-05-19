@@ -211,18 +211,18 @@ interface RoundTabsProps {
 function RoundTabs({ roundCount, activeRound, onSelect }: RoundTabsProps) {
   const rounds = Array.from({ length: roundCount }, (_, i) => i + 1);
   return (
-    <div className="flex items-center gap-1.5 overflow-x-auto -mx-1 px-1 lg:flex-wrap lg:overflow-visible">
-      <span className="text-xs text-slate-500 mr-1 shrink-0">轮次</span>
+    <div className="flex items-center gap-2 overflow-x-auto -mx-1 px-1 lg:flex-wrap lg:overflow-visible">
+      <span className="text-sm text-slate-500 mr-1 shrink-0">轮次</span>
       {rounds.map((r) => (
         <button
           key={r}
           type="button"
           onClick={() => onSelect(r)}
           className={
-            "shrink-0 min-w-[2rem] px-2 py-1 rounded text-sm font-semibold tabular-nums " +
+            "shrink-0 w-10 h-10 rounded-lg text-base font-semibold tabular-nums transition active:scale-95 " +
             (r === activeRound
-              ? "bg-slate-800 text-white"
-              : "bg-slate-100 text-slate-600 hover:bg-slate-200")
+              ? "bg-slate-800 text-white shadow"
+              : "bg-slate-100 text-slate-700 hover:bg-slate-200")
           }
         >
           {r}

@@ -1,73 +1,112 @@
-# React + TypeScript + Vite
+# RealG · 排场助手
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+为羽毛球俱乐部组织者打造的场地编排工具。组织者粘贴接龙名单、设置场地号，
+就能以"场"为单位快速排出每一轮谁打哪片场地，一键导出图片发到微信群。
 
-Currently, two official plugins are available:
+线上地址：https://reala.jumpy.net.cn
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 已交付的能力
 
-## React Compiler
+### 设置面板（左侧 / 移动端抽屉）
+- 粘贴接龙文本，自动解析"以数字开头"的行，跳过头部说明
+- 玩家列表两列网格展示，点击 A/B 标签切换等级
+- 场地号一目了然：当前生效的场地以彩色 badge 显示
+- 默认 6 块场地（14、15、16、19、20、21），8 局
+- 轮次数 ± 按钮触摸友好
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### 排场操作台
+- 切换轮次（1–N），按钮 40×40，单手好按
+- 场地卡片：4 个槽位，点击空槽则把休息池的玩家放进来；点已上场玩家把他撤回休息池
+- 默认自动选中第一个未满的场地，省去手动切换
+- 玩家芯片显示等级 / 名字 / 已打场数
+- 上一轮在休息的玩家在休息池**和**场地卡里都用琥珀色高亮 + "休"标签提示
 
-## Expanding the ESLint configuration
+### 白板（只读 + 截图源）
+- 全员混合显示（不再 A/B 分区，避免歧视感）
+- 当前轮次列高亮琥珀色
+- **可编辑真名**：点击玩家名格子可标注真名，
+  例如把 `Zoe+1` 标为 `Mary`
+  - 屏幕显示 `Zoe+1 · Mary`
+  - 导出 PNG 只显示 `Mary`
+- 一键导出 PNG（modern-screenshot），导出图自动隐藏"次"列、编辑提示等
+  操作辅助元素
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### 移动端体验（< 1024px）
+- 顶栏 ⚙️ 设置按钮 → 右侧滑入抽屉
+- 场地卡 2 列紧凑布局
+- 轮次按钮横向滚动
+- **吸底休息池**：场地卡和休息池始终同屏可见，可拉起到 70vh
+- iPhone 安全区适配
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### 持久化
+- 全部状态写入 localStorage（key: `realg-session-v1`）
+- 不上传任何服务器，玩家名单不外泄
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## 技术栈
+- **Vite 8** + **React 19** + **TypeScript**
+- **Tailwind CSS v4**（@tailwindcss/vite 插件，零配置）
+- **Zustand** 状态管理 + persist 中间件
+- **modern-screenshot** 截图导出（兼容 Tailwind v4 的 oklch 颜色）
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## 项目结构
+```
+src/
+├── App.tsx                       入口布局，桌面侧栏 / 移动抽屉切换
+├── domain/types.ts               领域模型（Player / Court / Match / Round / Constraint）
+├── store/sessionStore.ts         Zustand 全局状态 + 持久化
+├── components/
+│   ├── SetupPanel.tsx            场次设置（名单 / 场地 / 轮次）
+│   ├── RoundBuilder.tsx          排场操作台 + 桌面/移动两种休息池
+│   ├── Whiteboard.tsx            白板视图 + 真名编辑 + PNG 导出
+│   └── Drawer.tsx                右侧滑入抽屉（移动端设置）
+└── utils/
+    ├── roster.ts                 接龙文本解析
+    ├── courtColors.ts            场地号 → 稳定颜色
+    └── exportPng.ts              带 data-export="hide" 过滤的截图导出
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 开发与部署
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
+npm run dev        # http://localhost:5173
+npm run build      # 类型检查 + 生产构建
 ```
+
+部署：`git push origin main` 即触发 Vercel 自动部署。
+
+## 已完成的开发阶段
+- **Phase 0**：脚手架（Vite + React + TS + Tailwind + 领域模型）
+- **Phase 1**：静态白板 — 录入名单、手动填场地号、PNG 导出
+- **Phase 2**：以"场"为中心的操作台 — 场地卡 + 休息池 + 出场计数
+  - 移动端独立 UI（设置抽屉 + 吸底休息池）
+  - 真名编辑、白板/导出名字差异化
+  - 默认 6 场 8 局
+
+## 待开发阶段
+
+### Phase 3：傻瓜自动排表（最优先）
+目标：组织者按一下"生成第 N 轮"就能拿到一个可用的草稿，再用现有的点击交换微调。
+- 算法主线：按 `play_count` 升序贪心，把 4 人塞进每个场地
+- 上一轮在休息的玩家本轮**优先上场**（已有标识，算法层接入）
+- 撤销 / 重新生成
+- "锁定本轮" → 历史轮次只读
+
+### Phase 4：智能化（按俱乐部反馈调整）
+- 等级匹配（A 配 A，凑不齐再跨级）
+- 硬约束 UI：
+  - 选中 4 人 → "锁定组合"，下一轮一定同场
+  - 选中 2 人 → "搭档绑定"，下一轮一定同场
+  - "仇人"避让（可选）
+- 算法权重可调（公平性 vs 等级匹配）
+
+### Phase 5：协作与持久化（按需）
+- 跨场次玩家库（记住每个人的等级 / 真名）
+- 玩家端只读链接（自己查"我下一轮在哪片场"）
+- 多组织者协作（需要后端）
+
+### 设计原则
+> "完成大于完美 (Completion over perfection)" · "慢即是快 (Slow is fast)"
+
+每个 Phase 上线后先在俱乐部用一次，再决定下一阶段重点 — 真实痛点优先于
+预设的"应该有"功能。
